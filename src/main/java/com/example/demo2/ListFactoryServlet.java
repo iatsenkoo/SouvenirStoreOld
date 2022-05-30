@@ -21,7 +21,6 @@ public class ListFactoryServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Factory> factories = getInstance().list();
 
-
         if(factories.isEmpty()){
             request.setAttribute("errorString","no one factory find");
         } else {
@@ -35,37 +34,26 @@ public class ListFactoryServlet extends HttpServlet {
         List<Factory> factories = getInstance().list();
         List<Factory> factoriesSearch = new ArrayList<>();
         if(request.getParameter("nameSouvenir")!=null && request.getParameter("year")!=null){
-            List<Souvenir> souvenirs = SouvenirModel.getInstance().list().stream()
+            factories = SouvenirModel.getInstance().list().stream()
                     .filter(s->s.getName().equals(request.getParameter("nameSouvenir")))
                     .filter(s->s.getDateOfProduction().getYear()==Integer.parseInt(request.getParameter("year")))
+                    .map(Souvenir::getFactory)
                     .toList();
-            for (Souvenir s : souvenirs) {
-                factoriesSearch.add(s.getFactory());
-            }
-            if(factoriesSearch.isEmpty()){
-                request.setAttribute("errorString","no one factory find for this parameters");
-            } else {
-                request.setAttribute("factoryList", factoriesSearch);
-            }
-        }else if(request.getParameter("price")!=null){
-            List<Souvenir> souvenirs = SouvenirModel.getInstance().list().stream()
-                    .filter(s->s.getPrice()<Double.parseDouble(request.getParameter("price")))
-                    .toList();
-            for (Souvenir s : souvenirs) {
-                factoriesSearch.add(s.getFactory());
-            }
-            if(factoriesSearch.isEmpty()){
-                request.setAttribute("errorString","no one factory find for this parameters");
-            } else {
-                request.setAttribute("factoryList", factoriesSearch);
-            }
-        } else {
-            if (factories.isEmpty()) {
-                request.setAttribute("errorString", "no one factory find for this parameters");
-            } else {
-                request.setAttribute("factoryList", factories);
-            }
         }
+        if(request.getParameter("price")!=null){
+            factories = SouvenirModel.getInstance().list().stream()
+                    .filter(s->s.getPrice()<Double.parseDouble(request.getParameter("price")))
+                    .map(Souvenir::getFactory)
+                    .toList();
+
+        }
+
+        if (factories.isEmpty()) {
+            request.setAttribute("errorString", "no one factory find for this parameters");
+        } else {
+            request.setAttribute("factoryList", factories);
+        }
+
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("listFactoryView.jsp");
         requestDispatcher.forward(request, response);
     }
